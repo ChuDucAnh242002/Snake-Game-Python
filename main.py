@@ -38,8 +38,8 @@ SNAKE_BODY_HORIZONTAL_IMAGE = pygame.transform.rotate(SNAKE_BODY_VERTICLE_IMAGE,
 
 SNAKE_TURN_LD_IMAGE = pygame.image.load(os.path.join('img', 'turn', 'turn_ld.png'))
 SNAKE_TURN_LD_IMAGE = pygame.transform.scale(SNAKE_TURN_LD_IMAGE, (SNAKE_WIDTH, SNAKE_HEIGHT))
-SNAKE_TURN_LU_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 90)
-SNAKE_TURN_RD_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 270)
+SNAKE_TURN_LU_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 270)
+SNAKE_TURN_RD_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 90)
 SNAKE_TURN_RU_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 180)
 
 def draw_window(snake):
@@ -47,6 +47,8 @@ def draw_window(snake):
 
     draw_border()
     draw_snake(snake.root())
+
+    # WIN.blit(SNAKE_TAIL_UP_IMAGE,(0,0) )
 
     pygame.display.update()
 
@@ -98,37 +100,46 @@ def draw_border():
         pygame.draw.rect(WIN, BLACK, border_verticle)
         pygame.draw.rect(WIN, BLACK, border_horizontal)
 
-def handle_movement(root, keys_pressed):
+def handle_movement(root, keys_pressed, snake):
     if keys_pressed[pygame.K_a] and root.side != "right" and root.x > 0:
-        move_recursive(root, "left", None, None, None)
+        move_recursive(root, "left", None, None, None, snake)
         return
         
     if keys_pressed[pygame.K_d] and root.side != "left" and root.x < WIDTH - BLOCK_SIZE:
-        move_recursive(root, "right", None, None, None)
+        move_recursive(root, "right", None, None, None, snake)
         return
         
     if keys_pressed[pygame.K_w] and root.side != "down" and root.y > 0:
-        move_recursive(root, "up", None, None, None)
+        move_recursive(root, "up", None, None, None, snake)
         return
         
     if keys_pressed[pygame.K_s] and root.side != "up" and root.y < HEIGHT - BLOCK_SIZE:
-        move_recursive(root, "down", None, None, None)
+        move_recursive(root, "down", None, None, None, snake)
         return
     
-
-def move_recursive(cur_node, side, last_x , last_y, last_side):
+def move_recursive(cur_node, side, last_x , last_y, last_side, snake):
     if cur_node == None:
         return
 
     if cur_node.parent == None:
         last_side = change_last_side(cur_node, side)
+        
         last_x = cur_node.x
         last_y = cur_node.y
         move_head(cur_node, side)
-        return move_recursive(cur_node.child, side, last_x, last_y, last_side)
+        return move_recursive(cur_node.child, side, last_x, last_y, last_side, snake)
 
     if cur_node.child == None:
-        pass
+        snake.last_tail.x = cur_node.x
+        snake.last_tail.y = cur_node.y
+        snake.last_tail.side = cur_node.side
+        cur_node.x = last_x
+        cur_node.y = last_y
+        if cur_node.parent.parent == None :    
+            cur_node.side = last_side
+            return
+        move_tail_side(cur_node, last_side)
+        return 
 
     tempx = cur_node.x
     tempy = cur_node.y
@@ -140,8 +151,7 @@ def move_recursive(cur_node, side, last_x , last_y, last_side):
     last_y = tempy
     last_side = temp_side
 
-    move_recursive(cur_node.child, side, last_x, last_y, last_side)
-
+    move_recursive(cur_node.child, side, last_x, last_y, last_side, snake)
 
 def move_head(head_node, side):
 
@@ -169,39 +179,58 @@ def change_last_side(head_node, side):
 
     if side == "left": 
         if head_node.side == "up":
-            return "lu"
+            return "ru"
         if head_node.side == "down":
-            return "ld"
+            return "rd"
 
     if side == "right": 
         if head_node.side == "up":
-            return "ru"
+            return "lu"
         if head_node.side == "down":
-            return "rd"
+            return "ld"
 
     if side == "up": 
+        if head_node.side == "left":
+            return "ld"
+        if head_node.side == "right":
+            return "rd"
+
+    if side == "down": 
         if head_node.side == "left":
             return "lu"
         if head_node.side == "right":
             return "ru"
 
-    if side == "right": 
-        if head_node.side == "left":
-            return "ld"
-        if head_node.side == "right":
-            return "rd"
+    if (side == "right" and head_node.side == "right") or (side == "left" and head_node.side == "left"):
+        return "horizontal"
+
+    if (side == "down" and head_node.side == "down") or (side == "up" and head_node.side == "up"):
+        return "verticle"
     
-
-
-def move_tail(tail_node):
-    
-    pass
-
+def move_tail_side(tail_node, last_side):
+    # if (last_side == "lu" and tail_node.side == "down") or (last_side == "ld" and tail_node.side == "up"): 
+    #     tail_node.side = "left"
+    # if (last_side == "ru" and tail_node.side == "down") or (last_side == "rd" and tail_node.side == "up"): 
+    #     tail_node.side = "right"
+    # if (last_side == "ld" and tail_node.side == "left") or (last_side == "rd" and tail_node.side == "right"): 
+    #     tail_node.side = "up"
+    # if (last_side == "lu" and tail_node.side == "left") or (last_side == "ru" and tail_node.side == "right"): 
+    #     tail_node.side = "down"
+    print(last_side, tail_node.side)
+    if (last_side == "ru" and tail_node.side == "right") or (last_side == "lu" and tail_node.side == "left"):
+        tail_node.side = "down"
+    elif (last_side == "rd" and tail_node.side == "right") or (last_side == "ld" and tail_node.side == "left"):
+        tail_node.side = "up"
+    elif (last_side == "rd" and tail_node.side == "down") or (last_side == "ru" and tail_node.side == "up"):
+        tail_node.side = "left"
+    elif (last_side == "ld" and tail_node.side == "down") or (last_side == "lu" and tail_node.side == "up"):
+        tail_node.side = "right"
 
 def main():
 
     board = [[" " for i in range (10)] for i in range (10)]
     snake = SNAKE()
+    snake.add_body(BLOCK_SIZE, 0, "horizontal")
 
     # scale_image()
 
@@ -217,7 +246,7 @@ def main():
 
         keys_pressed = pygame.key.get_pressed()
 
-        handle_movement(snake.root(), keys_pressed)
+        handle_movement(snake.root(), keys_pressed, snake)
 
         draw_window(snake)
         

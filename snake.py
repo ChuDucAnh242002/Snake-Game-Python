@@ -19,13 +19,14 @@ class SNAKE():
         self.head = None
         self.tail = None
         self.bodies = []
+        self.last_tail = node(None, None, None, "tail")
         self.initialize_position()
 
     def initialize_position(self):
 
 
-        self.head = node(BLOCK_SIZE , 0, "right", "head")
-        self.tail = node(0, 0, "right", "tail")
+        self.head = node(BLOCK_SIZE*2 , 0, "right", "head")
+        self.tail = node(BLOCK_SIZE, 0, "right", "tail")
 
         self.head.child = self.tail
         self.tail.parent = self.head
@@ -34,36 +35,24 @@ class SNAKE():
     def move(self, keys_pressed):
 
         pass
-    #     head_side = self.position[0][2]
-    #     if keys_pressed[pygame.K_a] :
-            
-    #         self.position[0][0] -= BLOCK_SIZE
-    #         if head_side != "left":
-    #             self.position[0][2] = "left"
-
-    #     if keys_pressed[pygame.K_d] :
-
-    #         self.position[0][0] += BLOCK_SIZE
-    #         if head_side != "right":
-    #             self.position[0][2] = "right"
-            
-    #     if keys_pressed[pygame.K_w] :
-
-    #         self.position[0][1] -= BLOCK_SIZE
-    #         if head_side != "up":
-    #             self.position[0][2] = "up"
-
-    #     if keys_pressed[pygame.K_s] :
-
-    #         self.position[0][1] += BLOCK_SIZE
-    #         if head_side != "down":
-    #             self.position[0][2] = "down"
-    #     pass
 
     def add_body(self, x, y, side):
+
+        # duplicate tail
+        # x = self.tail.x
+        # y = self.tail.y
+        # side = self.tail.side
+        # if side == "left" or side == "right": side = "horizontal"
+        # else: side = "verticle"
+        
         body = node(x, y, side, "body")
         body.child = self.tail
-        self.tail.parent = self.child
+        self.tail.parent = body
+        # self.tail.x = self.last_tail.x
+        # self.tail.y = self.last_tail.y
+        # self.tail.side = self.last_tail.side
+        self.tail.x = 0
+        self.tail.y = 0
 
         if self.bodies == []:
             body.parent = self.head
