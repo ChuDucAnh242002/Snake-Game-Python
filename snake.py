@@ -1,4 +1,4 @@
-import pygame
+# import pygame
 
 BLOCK_SIZE = 80
 
@@ -25,13 +25,14 @@ class SNAKE():
 
 
         self.head = node(BLOCK_SIZE , 0, "right", "head")
-        self.tail = node(0, 0, "left", "tail")
+        self.tail = node(0, 0, "right", "tail")
 
         self.head.child = self.tail
         self.tail.parent = self.head
 
 
     def move(self, keys_pressed):
+
         pass
     #     head_side = self.position[0][2]
     #     if keys_pressed[pygame.K_a] :
