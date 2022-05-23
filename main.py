@@ -1,3 +1,12 @@
+"""
+    Author : Chu Duc Anh
+    GitHub : https://github.com/ChuDucAnh242002
+    A 2D snake game. Move the snake by pressing WASD key.
+    Try to eat as much apples as you can. 
+    You will lose when you bite yourself.
+"""
+
+# Using pygame module
 import pygame
 import os
 import random
@@ -25,12 +34,15 @@ BORDER_SIZE = 1
 LOSSER_FONT = pygame.font.SysFont('comicsans', 120)
 SCORE_FONT = pygame.font.SysFont('comicsans', 60)
 
+# event when eat apple and bite yourself
 EAT_APPLE = pygame.USEREVENT + 1
 BITE = pygame.USEREVENT + 2
 
+# GET eat and die sound tracks
 EAT_SOUND = pygame.mixer.Sound(os.path.join('sound', 'EatSound.ogg'))
 DIE_SOUND = pygame.mixer.Sound(os.path.join('sound', 'DieSound.ogg'))
 
+# GET every parts of snake images
 SNAKE_HEAD_RIGHT_IMAGE = pygame.image.load(os.path.join('img', 'head', 'head_right.png'))
 SNAKE_HEAD_RIGHT_IMAGE = pygame.transform.scale(SNAKE_HEAD_RIGHT_IMAGE, (SNAKE_WIDTH, SNAKE_HEIGHT))
 SNAKE_HEAD_LEFT_IMAGE = pygame.transform.rotate(SNAKE_HEAD_RIGHT_IMAGE, 180)
@@ -47,19 +59,25 @@ SNAKE_BODY_VERTICLE_IMAGE = pygame.image.load(os.path.join('img', 'body', 'body_
 SNAKE_BODY_VERTICLE_IMAGE = pygame.transform.scale(SNAKE_BODY_VERTICLE_IMAGE, (SNAKE_WIDTH, SNAKE_HEIGHT))
 SNAKE_BODY_HORIZONTAL_IMAGE = pygame.transform.rotate(SNAKE_BODY_VERTICLE_IMAGE, 90)
 
+# When snake turn
 SNAKE_TURN_LD_IMAGE = pygame.image.load(os.path.join('img', 'turn', 'turn_ld.png'))
 SNAKE_TURN_LD_IMAGE = pygame.transform.scale(SNAKE_TURN_LD_IMAGE, (SNAKE_WIDTH, SNAKE_HEIGHT))
 SNAKE_TURN_LU_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 270)
 SNAKE_TURN_RD_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 90)
 SNAKE_TURN_RU_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 180)
 
+# Apple
 FOOD_IMAGE = pygame.image.load(os.path.join('img', 'food.png'))
 FOOD_IMAGE = pygame.transform.scale(FOOD_IMAGE, (SNAKE_WIDTH, SNAKE_HEIGHT))
 
+# Background
 GRASS_IMAGE = pygame.image.load(os.path.join('img', 'grass_bg.png'))
 GRASS_IMAGE = pygame.transform.scale(GRASS_IMAGE, (WIDTH, HEIGHT))
 
 def draw_window(snake, board):
+    """
+        Drawing background, border, food and snake
+    """
 
     WIN.blit(GRASS_IMAGE, (0, 0))
 
@@ -70,9 +88,13 @@ def draw_window(snake, board):
     pygame.display.update()
 
 def draw_snake(cur_node):
+    """
+        Recursive function that print every parts of the snake
+    """
     if cur_node == None:
         return
 
+    # Head
     if cur_node.part == "head":
         if (cur_node.side == "right"):
             WIN.blit(SNAKE_HEAD_RIGHT_IMAGE, (cur_node.x, cur_node.y))
@@ -83,6 +105,7 @@ def draw_snake(cur_node):
         elif (cur_node.side == "down"):
             WIN.blit(SNAKE_HEAD_DOWN_IMAGE, (cur_node.x, cur_node.y))
         
+    # Tail
     elif cur_node.part == "tail":
         if (cur_node.side == "right"):
             WIN.blit(SNAKE_TAIL_LEFT_IMAGE, (cur_node.x, cur_node.y))
@@ -93,11 +116,13 @@ def draw_snake(cur_node):
         elif (cur_node.side == "down"):
             WIN.blit(SNAKE_TAIL_UP_IMAGE, (cur_node.x, cur_node.y))
 
+    # Body
     elif cur_node.part == "body":
         if(cur_node.side == "horizontal"):
             WIN.blit(SNAKE_BODY_HORIZONTAL_IMAGE, (cur_node.x, cur_node.y))
         if(cur_node.side == "verticle"):
             WIN.blit(SNAKE_BODY_VERTICLE_IMAGE, (cur_node.x, cur_node.y))
+        # When body turn
         if(cur_node.side == "ld"):
             WIN.blit(SNAKE_TURN_LD_IMAGE, (cur_node.x, cur_node.y))
         if(cur_node.side == "lu"):
@@ -110,7 +135,7 @@ def draw_snake(cur_node):
     draw_snake(cur_node.child)
 
 def draw_border():
-    
+    # 10 by 10 border
     for i in range(1, 10):
         border_verticle = pygame.Rect(BLOCK_SIZE * i, 0, BORDER_SIZE, HEIGHT)
         border_horizontal = pygame.Rect(0, BLOCK_SIZE * i, WIDTH, BORDER_SIZE)
@@ -125,6 +150,7 @@ def draw_food(board):
     WIN.blit(FOOD_IMAGE, (i*BLOCK_SIZE, j*BLOCK_SIZE))
 
 def draw_losser(losser_text, score):
+    # When snake bites itself, the game is over
     draw_text = LOSSER_FONT.render(losser_text, 1, RED)
     score_text = SCORE_FONT.render(score, 1, RED)
     WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()/2,
@@ -135,6 +161,7 @@ def draw_losser(losser_text, score):
     pygame.time.delay(1000)
     
 def handle_movement(root, keys_pressed, snake):
+    # Pressing key WASD
     if keys_pressed[pygame.K_a] and root.side != "right" and root.x > 0:
         move_recursive(root, "left", None, None, None, snake)
         return
@@ -152,9 +179,12 @@ def handle_movement(root, keys_pressed, snake):
         return
     
 def move_recursive(cur_node, side, last_x , last_y, last_side, snake):
+
+    # Moving when a key is pressed and the whole snake move
     if cur_node == None:
         return
 
+    # Head 
     if cur_node == snake.head:
         last_side = change_last_side(cur_node, side)
         
@@ -163,6 +193,7 @@ def move_recursive(cur_node, side, last_x , last_y, last_side, snake):
         move_head(cur_node, side)
         return move_recursive(cur_node.child, side, last_x, last_y, last_side, snake)
 
+    # Tail
     if cur_node == snake.tail:
         snake.last_tail.x = cur_node.x
         snake.last_tail.y = cur_node.y
@@ -175,6 +206,7 @@ def move_recursive(cur_node, side, last_x , last_y, last_side, snake):
         move_tail_side(cur_node, last_side)
         return 
 
+    # Body
     tempx = cur_node.x
     tempy = cur_node.y
     temp_side = cur_node.side
@@ -188,7 +220,6 @@ def move_recursive(cur_node, side, last_x , last_y, last_side, snake):
     move_recursive(cur_node.child, side, last_x, last_y, last_side, snake)
 
 def move_head(head_node, side):
-
     if side == "left":
         head_node.x -= BLOCK_SIZE
 
@@ -204,13 +235,18 @@ def move_head(head_node, side):
     change_head_side(head_node, side)
 
 def change_head_side(head_node, side):
+    # change head side when it is not currently in the side the key pressed
     if head_node.side != side:
         head_node.side = side
 
 def change_last_side(head_node, side):
+    # Find the last side of head and fit to other parts
+
+    # Tail part
     if head_node.child.part == "tail":
         return side
 
+    # Body part. When snake change direction
     if side == "left": 
         if head_node.side == "up":
             return "ru"
@@ -235,6 +271,7 @@ def change_last_side(head_node, side):
         if head_node.side == "right":
             return "ru"
 
+    # Body part. When snake go the same direction
     if (side == "right" and head_node.side == "right") or (side == "left" and head_node.side == "left"):
         return "horizontal"
 
@@ -243,6 +280,7 @@ def change_last_side(head_node, side):
     
 def move_tail_side(tail_node, last_side):
 
+    # Moving the tail as the last body part moves
     if (last_side == "ru" and tail_node.side == "right") or (last_side == "lu" and tail_node.side == "left"):
         tail_node.side = "down"
     elif (last_side == "rd" and tail_node.side == "right") or (last_side == "ld" and tail_node.side == "left"):
@@ -253,6 +291,9 @@ def move_tail_side(tail_node, last_side):
         tail_node.side = "right"
 
 def snake_on_board(snake, cur_node, board):
+    """
+        Print the snake on board 10x10 array
+    """
     if cur_node == None:
         if snake.last_tail.x != None and snake.last_tail.y != None:
             x = snake.last_tail.x // BLOCK_SIZE
@@ -282,6 +323,7 @@ def snake_on_board(snake, cur_node, board):
 
 def available_move(board):
 
+    # return available move in the board
     positions = []
     for j in range(10):
         for i in range(10):
@@ -291,6 +333,7 @@ def available_move(board):
 
 def food_on_board(board):
 
+    # Take a random place on a board to get the food position
     a, b = food_position(board)
     if a != None and b != None:
         board[a][b] = " "
@@ -300,6 +343,7 @@ def food_on_board(board):
     board[i][j] = "0"
 
 def food_position(board):
+    # Get food position
     for a in range(10):
         for b in range(10):
             if board[a][b] == "0":
@@ -310,7 +354,10 @@ def main():
 
     board = [[" " for i in range (10)] for i in range (10)]
     snake = SNAKE()
+
+    # Create food
     food_on_board(board)
+
     losser_text = " "
     run = True
 
@@ -322,10 +369,14 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
+            
+            # Eat apple
             elif event.type == EAT_APPLE:
                 snake.add_body()
                 food_on_board(board)
                 EAT_SOUND.play()
+
+            # Bite yourself
             elif event.type == BITE:
                 losser_text = "YOU LOSE!"
                 DIE_SOUND.play()
@@ -336,6 +387,8 @@ def main():
         snake_on_board(snake, snake.root(), board)
 
         draw_window(snake, board)
+
+        # End game
         if losser_text == "YOU LOSE!":
             score = "Score:" + str(snake.length)
             draw_losser(losser_text, score)
