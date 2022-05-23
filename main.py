@@ -17,9 +17,12 @@ FPS = 100
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+RED = (255, 0, 0)
 
 SNAKE_WIDTH, SNAKE_HEIGHT = 80, 80
 BORDER_SIZE = 1
+
+LOSSER_FONT = pygame.font.SysFont('comicsans', 120)
 
 EAT_APPLE = pygame.USEREVENT + 1
 BITE = pygame.USEREVENT + 2
@@ -115,10 +118,16 @@ def draw_food(board):
         return
     WIN.blit(FOOD_IMAGE, (i*BLOCK_SIZE, j*BLOCK_SIZE))
 
+def draw_losser(losser_text):
+    draw_text = LOSSER_FONT.render(losser_text, 1, RED)
+    WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()/2,
+                         HEIGHT//2 - draw_text.get_height()/2))
+    pygame.display.update()
+    pygame.time.delay(1000)
+
 def handle_movement(root, keys_pressed, snake):
     if keys_pressed[pygame.K_a] and root.side != "right" and root.x > 0:
         move_recursive(root, "left", None, None, None, snake)
-        
         return
         
     if keys_pressed[pygame.K_d] and root.side != "left" and root.x < WIDTH - BLOCK_SIZE:
@@ -137,7 +146,7 @@ def move_recursive(cur_node, side, last_x , last_y, last_side, snake):
     if cur_node == None:
         return
 
-    if cur_node.parent == None:
+    if cur_node == snake.head:
         last_side = change_last_side(cur_node, side)
         
         last_x = cur_node.x
@@ -145,7 +154,7 @@ def move_recursive(cur_node, side, last_x , last_y, last_side, snake):
         move_head(cur_node, side)
         return move_recursive(cur_node.child, side, last_x, last_y, last_side, snake)
 
-    if cur_node.child == None:
+    if cur_node == snake.tail:
         snake.last_tail.x = cur_node.x
         snake.last_tail.y = cur_node.y
         snake.last_tail.side = cur_node.side
@@ -247,9 +256,15 @@ def snake_on_board(snake, cur_node, board):
     y = cur_node.y // BLOCK_SIZE
 
     # Set 1 if it snake parts
-    if board[x][y] == "0":
+    if board[x][y] == "0" and cur_node == snake.head:
         pygame.event.post(pygame.event.Event(EAT_APPLE))
+    elif board[x][y] == "1" and cur_node == snake.head:
+        pygame.event.post(pygame.event.Event(BITE))
+        return
+    
     board[x][y] = "1"
+    if cur_node == snake.head:
+        board[x][y] = "2"
 
     snake_on_board(snake, cur_node.child, board)
 
@@ -289,6 +304,7 @@ def main():
 
     clock = pygame.time.Clock()
     run = True
+    losser_text = ""
     while run:
         pygame.time.delay(50)
         clock.tick(FPS)
@@ -300,15 +316,22 @@ def main():
                 snake.add_body()
                 food_on_board(board)
             if event.type == BITE:
-                pass
-
+                losser_text = "YOU LOSE!"
+                
         keys_pressed = pygame.key.get_pressed()
 
         handle_movement(snake.root(), keys_pressed, snake)
         snake_on_board(snake, snake.root(), board)
         
+        if losser_text != "":
+            draw_losser(losser_text)
+            break
+
         draw_window(snake, board)
+
         
+        
+    main()
 
 if __name__ == "__main__":
     main()
