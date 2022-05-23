@@ -26,7 +26,7 @@ LOSSER_FONT = pygame.font.SysFont('comicsans', 120)
 SCORE_FONT = pygame.font.SysFont('comicsans', 60)
 
 EAT_APPLE = pygame.USEREVENT + 1
-BITE = pygame.USEREVENT + 4
+BITE = pygame.USEREVENT + 2
 
 EAT_SOUND = pygame.mixer.Sound(os.path.join('sound', 'EatSound.ogg'))
 DIE_SOUND = pygame.mixer.Sound(os.path.join('sound', 'DieSound.ogg'))
@@ -64,9 +64,9 @@ def draw_window(snake, board):
     WIN.blit(GRASS_IMAGE, (0, 0))
 
     draw_border()
-    draw_snake(snake.root())
     draw_food(board)
-
+    draw_snake(snake.root())
+    
     pygame.display.update()
 
 def draw_snake(cur_node):
@@ -132,7 +132,7 @@ def draw_losser(losser_text, score):
     WIN.blit(score_text, (WIDTH//2 - score_text.get_width()/2,
                          HEIGHT//2 + draw_text.get_height()/2 + score_text.get_height()//2))
     pygame.display.update()
-    pygame.time.delay(3000)
+    pygame.time.delay(1000)
     
 def handle_movement(root, keys_pressed, snake):
     if keys_pressed[pygame.K_a] and root.side != "right" and root.x > 0:
@@ -312,22 +312,21 @@ def main():
     snake = SNAKE()
     food_on_board(board)
     losser_text = " "
-    clock = pygame.time.Clock()
     run = True
 
     while run:
-
         pygame.time.delay(50)
+        clock = pygame.time.Clock()
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
-            if event.type == EAT_APPLE:
+            elif event.type == EAT_APPLE:
                 snake.add_body()
                 food_on_board(board)
                 EAT_SOUND.play()
-            if event.type == BITE:
+            elif event.type == BITE:
                 losser_text = "YOU LOSE!"
                 DIE_SOUND.play()
                 
@@ -340,6 +339,7 @@ def main():
         if losser_text == "YOU LOSE!":
             score = "Score:" + str(snake.length)
             draw_losser(losser_text, score)
+            losser_text == " "
             break
 
 if __name__ == "__main__":
