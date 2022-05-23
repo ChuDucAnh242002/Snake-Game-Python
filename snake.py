@@ -36,23 +36,22 @@ class SNAKE():
 
         pass
 
-    def add_body(self, x, y, side):
+    def add_body(self):
 
         # duplicate tail
-        # x = self.tail.x
-        # y = self.tail.y
-        # side = self.tail.side
-        # if side == "left" or side == "right": side = "horizontal"
-        # else: side = "verticle"
+        x = self.tail.x
+        y = self.tail.y
+        side = self.tail.side
+        side = self.body_side(self.tail.side)
+        if side == "left" or side == "right": side = "horizontal"
+        elif side == "up" or side == "down": side = "verticle"
         
         body = node(x, y, side, "body")
         body.child = self.tail
         self.tail.parent = body
-        # self.tail.x = self.last_tail.x
-        # self.tail.y = self.last_tail.y
-        # self.tail.side = self.last_tail.side
-        self.tail.x = 0
-        self.tail.y = 0
+        self.tail.x = self.last_tail.x
+        self.tail.y = self.last_tail.y
+        self.tail.side = self.last_tail.side
 
         if self.bodies == []:
             body.parent = self.head
@@ -64,6 +63,19 @@ class SNAKE():
         body.parent = last_body
         last_body.child = body
         self.bodies.append(body)
+
+    def body_side(self, side):
+        
+        if side == "up" and self.last_tail.side == "right" or side == "left" and self.last_tail.side == "down":
+            side = "rd"
+        elif side == "down" and self.last_tail.side == "right" or side == "left" and self.last_tail.side == "up":
+            side = "ru"
+        elif side == "up" and self.last_tail.side == "left" or side == "right"  and self.last_tail.side == "down":
+            side = "ld"
+        elif side == "right" and self.last_tail.side == "up" or side == "down" and self.last_tail.side == "left":
+            side = "lu"
+        
+        return side
         
     def reset(self):
         pass

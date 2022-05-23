@@ -1,5 +1,6 @@
 import pygame
 import os
+import random
 
 from snake import SNAKE
 
@@ -19,6 +20,9 @@ BLACK = (0, 0, 0)
 
 SNAKE_WIDTH, SNAKE_HEIGHT = 80, 80
 BORDER_SIZE = 1
+
+EAT_APPLE = pygame.USEREVENT + 1
+BITE = pygame.USEREVENT + 2
 
 SNAKE_HEAD_RIGHT_IMAGE = pygame.image.load(os.path.join('img', 'head', 'head_right.png'))
 SNAKE_HEAD_RIGHT_IMAGE = pygame.transform.scale(SNAKE_HEAD_RIGHT_IMAGE, (SNAKE_WIDTH, SNAKE_HEIGHT))
@@ -42,11 +46,15 @@ SNAKE_TURN_LU_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 270)
 SNAKE_TURN_RD_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 90)
 SNAKE_TURN_RU_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 180)
 
-def draw_window(snake):
+FOOD_IMAGE = pygame.image.load(os.path.join('img', 'food.png'))
+FOOD_IMAGE = pygame.transform.scale(FOOD_IMAGE, (SNAKE_WIDTH, SNAKE_HEIGHT))
+
+def draw_window(snake, board):
     WIN.fill(WHITE)
 
     draw_border()
     draw_snake(snake.root())
+    draw_food(board)
 
     # WIN.blit(SNAKE_TAIL_UP_IMAGE,(0,0) )
 
@@ -100,9 +108,17 @@ def draw_border():
         pygame.draw.rect(WIN, BLACK, border_verticle)
         pygame.draw.rect(WIN, BLACK, border_horizontal)
 
+def draw_food(board):
+
+    i, j = food_position(board)
+    if i == None or j == None:
+        return
+    WIN.blit(FOOD_IMAGE, (i*BLOCK_SIZE, j*BLOCK_SIZE))
+
 def handle_movement(root, keys_pressed, snake):
     if keys_pressed[pygame.K_a] and root.side != "right" and root.x > 0:
         move_recursive(root, "left", None, None, None, snake)
+        
         return
         
     if keys_pressed[pygame.K_d] and root.side != "left" and root.x < WIDTH - BLOCK_SIZE:
@@ -208,15 +224,7 @@ def change_last_side(head_node, side):
         return "verticle"
     
 def move_tail_side(tail_node, last_side):
-    # if (last_side == "lu" and tail_node.side == "down") or (last_side == "ld" and tail_node.side == "up"): 
-    #     tail_node.side = "left"
-    # if (last_side == "ru" and tail_node.side == "down") or (last_side == "rd" and tail_node.side == "up"): 
-    #     tail_node.side = "right"
-    # if (last_side == "ld" and tail_node.side == "left") or (last_side == "rd" and tail_node.side == "right"): 
-    #     tail_node.side = "up"
-    # if (last_side == "lu" and tail_node.side == "left") or (last_side == "ru" and tail_node.side == "right"): 
-    #     tail_node.side = "down"
-    print(last_side, tail_node.side)
+
     if (last_side == "ru" and tail_node.side == "right") or (last_side == "lu" and tail_node.side == "left"):
         tail_node.side = "down"
     elif (last_side == "rd" and tail_node.side == "right") or (last_side == "ld" and tail_node.side == "left"):
@@ -226,12 +234,57 @@ def move_tail_side(tail_node, last_side):
     elif (last_side == "ld" and tail_node.side == "down") or (last_side == "lu" and tail_node.side == "up"):
         tail_node.side = "right"
 
+def snake_on_board(snake, cur_node, board):
+    if cur_node == None:
+        if snake.last_tail.x != None and snake.last_tail.y != None:
+            x = snake.last_tail.x // BLOCK_SIZE
+            y = snake.last_tail.y // BLOCK_SIZE
+            board[x][y] = " "
+        return
+    
+    # 2 Dimensional list
+    x = cur_node.x // BLOCK_SIZE
+    y = cur_node.y // BLOCK_SIZE
+
+    # Set 1 if it snake parts
+    if board[x][y] == "0":
+        pygame.event.post(pygame.event.Event(EAT_APPLE))
+    board[x][y] = "1"
+
+    snake_on_board(snake, cur_node.child, board)
+
+def available_move(board):
+
+    positions = []
+    for j in range(10):
+        for i in range(10):
+            if board[i][j] == " ":
+                positions.append([i,j])
+    return positions
+
+def food_on_board(board):
+
+    a, b = food_position(board)
+    if a != None and b != None:
+        board[a][b] = " "
+    
+    random_position = random.choice(available_move(board))
+    i, j = random_position[0], random_position[1]
+    board[i][j] = "0"
+
+def food_position(board):
+    for a in range(10):
+        for b in range(10):
+            if board[a][b] == "0":
+                return a, b
+    return None, None
+
 def main():
 
     board = [[" " for i in range (10)] for i in range (10)]
     snake = SNAKE()
-    snake.add_body(BLOCK_SIZE, 0, "horizontal")
-
+    food_on_board(board)
+    # snake.add_body(BLOCK_SIZE, 0, "horizontal")
     # scale_image()
 
     clock = pygame.time.Clock()
@@ -243,12 +296,18 @@ def main():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
+            if event.type == EAT_APPLE:
+                snake.add_body()
+                food_on_board(board)
+            if event.type == BITE:
+                pass
 
         keys_pressed = pygame.key.get_pressed()
 
         handle_movement(snake.root(), keys_pressed, snake)
-
-        draw_window(snake)
+        snake_on_board(snake, snake.root(), board)
+        
+        draw_window(snake, board)
         
 
 if __name__ == "__main__":
