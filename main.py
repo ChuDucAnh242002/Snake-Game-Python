@@ -26,7 +26,10 @@ LOSSER_FONT = pygame.font.SysFont('comicsans', 120)
 SCORE_FONT = pygame.font.SysFont('comicsans', 60)
 
 EAT_APPLE = pygame.USEREVENT + 1
-BITE = pygame.USEREVENT + 2
+BITE = pygame.USEREVENT + 4
+
+EAT_SOUND = pygame.mixer.Sound(os.path.join('sound', 'EatSound.ogg'))
+DIE_SOUND = pygame.mixer.Sound(os.path.join('sound', 'DieSound.ogg'))
 
 SNAKE_HEAD_RIGHT_IMAGE = pygame.image.load(os.path.join('img', 'head', 'head_right.png'))
 SNAKE_HEAD_RIGHT_IMAGE = pygame.transform.scale(SNAKE_HEAD_RIGHT_IMAGE, (SNAKE_WIDTH, SNAKE_HEIGHT))
@@ -314,8 +317,6 @@ def main():
 
     while run:
 
-        
-
         pygame.time.delay(50)
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -325,8 +326,10 @@ def main():
             if event.type == EAT_APPLE:
                 snake.add_body()
                 food_on_board(board)
+                EAT_SOUND.play()
             if event.type == BITE:
                 losser_text = "YOU LOSE!"
+                DIE_SOUND.play()
                 
         keys_pressed = pygame.key.get_pressed()
 
@@ -338,8 +341,6 @@ def main():
             score = "Score:" + str(snake.length)
             draw_losser(losser_text, score)
             break
-
-        
 
 if __name__ == "__main__":
     while True:
