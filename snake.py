@@ -14,7 +14,7 @@ class node():
 
 class SNAKE():
     def __init__(self):
-        self.length = 3
+        self.length = 2
 
         self.head = None
         self.tail = None
@@ -30,11 +30,6 @@ class SNAKE():
 
         self.head.child = self.tail
         self.tail.parent = self.head
-
-
-    def move(self, keys_pressed):
-
-        pass
 
     def add_body(self):
 
@@ -63,6 +58,7 @@ class SNAKE():
         body.parent = last_body
         last_body.child = body
         self.bodies.append(body)
+        self.length += 1
 
     def body_side(self, side):
         
@@ -73,12 +69,8 @@ class SNAKE():
         elif side == "up" and self.last_tail.side == "left" or side == "right"  and self.last_tail.side == "down":
             side = "ld"
         elif side == "right" and self.last_tail.side == "up" or side == "down" and self.last_tail.side == "left":
-            side = "lu"
-        
+            side = "lu"      
         return side
-        
-    def reset(self):
-        pass
 
     def root(self):
         return self.head

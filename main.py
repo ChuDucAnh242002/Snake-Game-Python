@@ -23,6 +23,7 @@ SNAKE_WIDTH, SNAKE_HEIGHT = 80, 80
 BORDER_SIZE = 1
 
 LOSSER_FONT = pygame.font.SysFont('comicsans', 120)
+SCORE_FONT = pygame.font.SysFont('comicsans', 60)
 
 EAT_APPLE = pygame.USEREVENT + 1
 BITE = pygame.USEREVENT + 2
@@ -52,14 +53,16 @@ SNAKE_TURN_RU_IMAGE = pygame.transform.rotate(SNAKE_TURN_LD_IMAGE, 180)
 FOOD_IMAGE = pygame.image.load(os.path.join('img', 'food.png'))
 FOOD_IMAGE = pygame.transform.scale(FOOD_IMAGE, (SNAKE_WIDTH, SNAKE_HEIGHT))
 
+GRASS_IMAGE = pygame.image.load(os.path.join('img', 'grass_bg.png'))
+GRASS_IMAGE = pygame.transform.scale(GRASS_IMAGE, (WIDTH, HEIGHT))
+
 def draw_window(snake, board):
-    WIN.fill(WHITE)
+
+    WIN.blit(GRASS_IMAGE, (0, 0))
 
     draw_border()
     draw_snake(snake.root())
     draw_food(board)
-
-    # WIN.blit(SNAKE_TAIL_UP_IMAGE,(0,0) )
 
     pygame.display.update()
 
@@ -118,13 +121,16 @@ def draw_food(board):
         return
     WIN.blit(FOOD_IMAGE, (i*BLOCK_SIZE, j*BLOCK_SIZE))
 
-def draw_losser(losser_text):
+def draw_losser(losser_text, score):
     draw_text = LOSSER_FONT.render(losser_text, 1, RED)
+    score_text = SCORE_FONT.render(score, 1, RED)
     WIN.blit(draw_text, (WIDTH//2 - draw_text.get_width()/2,
                          HEIGHT//2 - draw_text.get_height()/2))
+    WIN.blit(score_text, (WIDTH//2 - score_text.get_width()/2,
+                         HEIGHT//2 + draw_text.get_height()/2 + score_text.get_height()//2))
     pygame.display.update()
-    pygame.time.delay(1000)
-
+    pygame.time.delay(3000)
+    
 def handle_movement(root, keys_pressed, snake):
     if keys_pressed[pygame.K_a] and root.side != "right" and root.x > 0:
         move_recursive(root, "left", None, None, None, snake)
@@ -259,8 +265,11 @@ def snake_on_board(snake, cur_node, board):
     if board[x][y] == "0" and cur_node == snake.head:
         pygame.event.post(pygame.event.Event(EAT_APPLE))
     elif board[x][y] == "1" and cur_node == snake.head:
-        pygame.event.post(pygame.event.Event(BITE))
-        return
+        if x == snake.tail.x and y == snake.tail.y:
+            pass
+        else:
+            pygame.event.post(pygame.event.Event(BITE))
+            return
     
     board[x][y] = "1"
     if cur_node == snake.head:
@@ -299,13 +308,14 @@ def main():
     board = [[" " for i in range (10)] for i in range (10)]
     snake = SNAKE()
     food_on_board(board)
-    # snake.add_body(BLOCK_SIZE, 0, "horizontal")
-    # scale_image()
-
+    losser_text = " "
     clock = pygame.time.Clock()
     run = True
-    losser_text = ""
+
     while run:
+
+        
+
         pygame.time.delay(50)
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -322,16 +332,15 @@ def main():
 
         handle_movement(snake.root(), keys_pressed, snake)
         snake_on_board(snake, snake.root(), board)
-        
-        if losser_text != "":
-            draw_losser(losser_text)
-            break
 
         draw_window(snake, board)
+        if losser_text == "YOU LOSE!":
+            score = "Score:" + str(snake.length)
+            draw_losser(losser_text, score)
+            break
 
         
-        
-    main()
 
 if __name__ == "__main__":
-    main()
+    while True:
+        main()
