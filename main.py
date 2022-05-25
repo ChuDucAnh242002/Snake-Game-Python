@@ -22,7 +22,7 @@ BLOCK_SIZE = WIDTH //10
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Snake game")
 
-FPS = 100
+FPS = 60
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -309,15 +309,14 @@ def snake_on_board(snake, cur_node, board):
     if board[x][y] == "0" and cur_node == snake.head:
         pygame.event.post(pygame.event.Event(EAT_APPLE))
     elif board[x][y] == "1" and cur_node == snake.head:
-        if x == snake.tail.x and y == snake.tail.y:
-            pass
-        else:
-            pygame.event.post(pygame.event.Event(BITE))
-            return
+        pygame.event.post(pygame.event.Event(BITE))
+        return
     
     board[x][y] = "1"
     if cur_node == snake.head:
         board[x][y] = "2"
+    if cur_node == snake.tail:
+        board[x][y] = "3"
 
     snake_on_board(snake, cur_node.child, board)
 
@@ -325,8 +324,8 @@ def available_move(board):
 
     # return available move in the board
     positions = []
-    for j in range(10):
-        for i in range(10):
+    for i in range(10):
+        for j in range(10):
             if board[i][j] == " ":
                 positions.append([i,j])
     return positions
@@ -340,7 +339,9 @@ def food_on_board(board):
     
     random_position = random.choice(available_move(board))
     i, j = random_position[0], random_position[1]
+    
     board[i][j] = "0"
+    
 
 def food_position(board):
     # Get food position
@@ -359,11 +360,12 @@ def main():
     food_on_board(board)
 
     losser_text = " "
+
+    clock = pygame.time.Clock()
     run = True
 
     while run:
         pygame.time.delay(50)
-        clock = pygame.time.Clock()
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -371,13 +373,15 @@ def main():
                 pygame.quit()
             
             # Eat apple
-            elif event.type == EAT_APPLE:
+            if event.type == EAT_APPLE:
                 snake.add_body()
+                snake_on_board(snake, snake.root(), board)
+
                 food_on_board(board)
                 EAT_SOUND.play()
 
             # Bite yourself
-            elif event.type == BITE:
+            if event.type == BITE:
                 losser_text = "YOU LOSE!"
                 DIE_SOUND.play()
                 
@@ -392,8 +396,9 @@ def main():
         if losser_text == "YOU LOSE!":
             score = "Score:" + str(snake.length)
             draw_losser(losser_text, score)
-            losser_text == " "
-            break
+            losser_text = " "
+            run = False
+
 
 if __name__ == "__main__":
     while True:
