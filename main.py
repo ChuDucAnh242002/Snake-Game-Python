@@ -13,6 +13,7 @@ import random
 
 from snake import SNAKE
 
+pygame.init()
 pygame.font.init()
 pygame.mixer.init()
 
